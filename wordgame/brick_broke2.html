@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<style type="text/css">
+		canvas{
+			border: 1px solid;
+			margin: 0px auto;
+			display: block;
+			width: 800px;
+			background-color:#E8F5E9;
+			margin-top: 50px;
+		}
+	</style>
+</head>
+<body>
+	<canvas id='mycanvas' width="800" height="500"></canvas>
+	<script type="text/javascript">
+		let canvas=document.getElementById('mycanvas');
+		let ctx=canvas.getContext('2d');
+
+		///keyboard button ///
+
+		//balls values////
+		let ballR=10;
+		let x=canvas.width/2;
+		let y=canvas.height-30;
+		let dx=3;
+		let dy=-3;
+		///pong values////
+		let pongW=80;
+		let pongH=15;
+		let pongX=(canvas.width-pongW)/2;
+		///bricks values////
+		let brickRow=3;
+		let brickCol=9;
+		let brickW=55;
+		let brickH=20;
+		let brickpadding=30;
+		let brickleft=30;
+		let bricktop=20;
+		///keyboard button press///
+		let left_key=37;
+		let right_key=39;
+
+		let bricks=[];
+		for(let i=0; i<brickCol; i++){
+			for(let j=0; j<brickRow; j++){
+				bricks.push({
+					x:(i * (brickW + brickpadding)) + brickleft,
+					y:(j * (brickH + brickpadding)) + bricktop,
+					status:1
+				})	
+			}
+		}
+		function drawBall(){
+			ctx.beginPath();
+			ctx.arc(x,y,ballR,0,Math.PI*2);
+			ctx.fillStyle='green';
+			ctx.fill();
+			ctx.closePath();
+		}
+		function drawPong(){
+			ctx.beginPath();
+			ctx.rect(pongX,canvas.height-pongH,pongW,pongH);
+			ctx.fillStyle='red';
+			ctx.fill();
+			ctx.closePath();
+		}
+		function drawBrick(){
+			bricks.forEach(function(brick){
+				if(!brick.status) return;
+
+				ctx.beginPath();
+				ctx.rect(brick.x,brick.y,brickW,brickH);
+				ctx.fillStyle='orange';
+				ctx.fill();
+				ctx.closePath(); 
+			});
+		}
+		function collissionDetection(){
+			bricks.forEach(function(b){
+				if(!b.status) return;
+
+			let is_collideColm = x> b.x && x< b.x + brickW;
+			let is_collideRow = y> b.y && y< b.y + brickH;
+
+			if(is_collideColm && is_collideRow){
+				dy=-dy;
+				b.status=0;
+			}
+			});
+		}
+		document.onkeydown=function(evt){
+			togglekey(evt.keyCode,true);
+		}
+		document.onkeyup=function(evt){
+			togglekey(evt.keyCode,false);
+		}
+		let controller={};
+		function togglekey(keycode,isPressed){
+			if(keycode===left_key){controller.left=isPressed;}
+			if(keycode===right_key){controller.right=isPressed;}
+
+		}
+		function handle_controller(){
+			if(controller.left){
+				pongX += -7;
+			}
+			if(controller.right){
+				pongX +=7;
+			}
+			x +=dx;
+			y +=dy;
+		}
+
+		function bounding_bounce(){
+
+			if(pongX+pongW > canvas.width){
+				pongX=canvas.width -pongW;
+			}
+			if(pongX < 0){
+				pongX=0;
+			}
+			if(hitside_wall()){
+				dx=-dx;
+			}
+
+			if(hitTop() || hitPong()){
+				dy=-dy;
+			}
+			if(gameover()){
+				document.location.reload();
+			}
+		function hitPong(){
+			return hitbottom() && ballOverPong();
+			}
+		function  ballOverPong(){
+			return x >pongX && x < pongX+pongW;
+		}
+		function hitbottom(){
+			return y + dy > canvas.height - ballR;
+		}
+		function hitTop(){
+			return y + dy< ballR;
+		}
+		function hitside_wall(){
+			return x+dx > canvas.width - ballR || x+dx< ballR;
+		}
+		function gameover(){
+			return hitbottom();
+		}
+
+		}
+
+		function draw(){
+			ctx.clearRect(0,0,canvas.width,canvas.height);
+		drawBall();
+		drawPong();
+		drawBrick();
+		collissionDetection();
+		handle_controller();
+		bounding_bounce();
+	}
+	
+	setInterval(draw,30);
+	</script>
+
+</body>
+</html>
